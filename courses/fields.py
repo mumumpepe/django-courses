@@ -2,7 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
 
-class OverField(models.PositiveIntegerField):
+class OrderField(models.PositiveIntegerField):
     def __init__(self, for_fields=None, *args, **kwargs):
         self.for_fields = for_fields
         super().__init__(*args, **kwargs)
@@ -21,4 +21,12 @@ class OverField(models.PositiveIntegerField):
                     }
                     qs = qs.filter(**query)
                 # get the order of the last item
-                
+                last_item = qs.latest(self.attname)
+                value = getattr(last_item, self.attname) + 1
+            except ObjectDoesNotExist:
+                value = 0
+            setattr(model_instance, self.attname, value)
+
+            return value
+        else:
+            return super().pre_save(model_instance, add)
